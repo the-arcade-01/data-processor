@@ -1,0 +1,44 @@
+server:
+  port: 8095
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: USER-MICROSERVICE
+          uri: lb://USER-MICROSERVICE
+          predicates:
+            - Path=/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: USER-MICROSERVICE
+                fallbackUri: forward:/userServiceFallBack
+        - id: DEPARTMENT-MICROSERVICE
+          uri: lb://DEPARTMENT-MICROSERVICE
+          predicates:
+            - Path=/departments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: DEPARTMENT-MICROSERVICE
+                fallbackUri: forward:/departmentServiceFallBack
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8090/eureka/
+  instance:
+    hostname: localhost
